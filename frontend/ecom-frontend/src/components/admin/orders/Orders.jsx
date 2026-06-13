@@ -1,30 +1,75 @@
-import React from 'react'
-import { FaShoppingCart } from 'react-icons/fa';
-import OrderTable from './OrderTable';
-import { useSelector } from 'react-redux';
-import useOrderFilter from '../../../hooks/useOrderFilter';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { FiShoppingBag, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { orderAPI } from '../../../services/api';
+import { updateOrderStatus } from '../../../store/actions';
+import Loader from '../../shared/Loader';
 
-const Orders = () => {
-  // const adminOrder = [ { "orderId": 17, "email": "user1@example.com", "orderItems": [ { "orderItemId": 7, "product": { "productId": 153, "productName": "Running Shoes", "image": "0abca637-0c4e-4054-ae03-bdfc51cb3396.png", "description": "Comfortable and lightweight running shoes for daily fitness", "quantity": 49, "price": 80, "discount": 10, "specialPrice": 72 }, "quantity": 1, "discount": 10, "orderedProductPrice": 72 } ], "orderDate": "2025-02-15", "payment": { "paymentId": 17, "paymentMethod": "online", "pgPaymentId": "pi_3QsfCYLK9jOar8Y81NsK7PXG", "pgStatus": "succeeded", "pgResponseMessage": "Payment successful", "pgName": "Stripe" }, "totalAmount": 72, "orderStatus": "Order Accepted !", "addressId": 1 }, { "orderId": 18, "email": "user1@example.com", "orderItems": [ { "orderItemId": 8, "product": { "productId": 102, "productName": "Blender", "image": "39356dd0-6682-4821-adc8-b198ee85b358.png", "description": "High-performance Blender having powerful features for modern family", "quantity": 28, "price": 500, "discount": 19, "specialPrice": 405 }, "quantity": 1, "discount": 19, "orderedProductPrice": 405 } ], "orderDate": "2025-07-18", "payment": { "paymentId": 18, "paymentMethod": "online", "pgPaymentId": "pi_3Rm6zYLK9jOar8Y81iyMdnMg", "pgStatus": "succeeded", "pgResponseMessage": "Payment successful", "pgName": "Stripe" }, "totalAmount": 405, "orderStatus": "Order Accepted !", "addressId": 5 } ];
-  // const pagination = { pageNumber: 0, pageSize: 50, totalElements: 11, totalPages: 1, lastPage: true };
-  
-  const {adminOrder, pagination} = useSelector((state) => state.order);
+const STATUS_OPTIONS = ['Order Accepted', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+const statusColor = { 'Order Accepted': '#2874f0', 'Processing': '#ff9f00', 'Shipped': '#9c27b0', 'Delivered': '#26a541', 'Cancelled': '#ff6161' };
 
-  useOrderFilter();
+const AdminOrders = () => {
+  const dispatch = useDispatch();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(null);
 
-  const emptyOrder = !adminOrder || adminOrder?.length ===0;
+  const loadOrders = () => {
+    orderAPI.getAllOrders().then(r => setOrders(r.data)).catch(() => toast.error('Failed to load orders')).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadOrders(); }, []);
+
+  const handleStatusChange = async (orderId, status) => {
+    await dispatch(updateOrderStatus(orderId, status, toast));
+    loadOrders();
+  };
+
+  if (loading) return <Loader />;
+
   return (
-    <div className='pb-6 pt-20'>
-        {emptyOrder ? (
-            <div className='flex flex-col items-center justify-center text-gray-600 py-10'>
-                <FaShoppingCart size={50} className='mb-3'/>
-                <h2 className='text-2xl font-semibold'>No Orders Placed Yet</h2>
+    <div>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, marginBottom: 24 }}>Orders ({orders.length})</h1>
+      {orders.length === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '60px 24px', color: 'var(--text-secondary)' }}>
+          <FiShoppingBag size={48} /><p style={{ fontWeight: 600 }}>No orders yet</p>
+        </div>
+      ) : orders.map(order => (
+        <div key={order.orderId} style={{ background: '#fff', borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 14, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, cursor: 'pointer' }} onClick={() => setExpanded(e => e === order.orderId ? null : order.orderId)}>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <div><p style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Order</p><p style={{ fontWeight: 700 }}>#{order.orderId}</p></div>
+              <div><p style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Customer</p><p style={{ fontWeight: 600, fontSize: 13 }}>{order.email}</p></div>
+              <div><p style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Date</p><p style={{ fontWeight: 600, fontSize: 13 }}>{order.orderDate}</p></div>
+              <div><p style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Total</p><p style={{ fontWeight: 700 }}>₹{order.totalAmount?.toFixed(0)}</p></div>
             </div>
-        ) : (
-           <OrderTable adminOrder={adminOrder} pagination={pagination}/>
-        )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <select value={order.orderStatus} onChange={e => { e.stopPropagation(); handleStatusChange(order.orderId, e.target.value); }}
+                style={{ padding: '6px 10px', borderRadius: 6, border: `1.5px solid ${statusColor[order.orderStatus] || '#2874f0'}`, fontWeight: 700, fontSize: 12, color: statusColor[order.orderStatus] || '#2874f0', background: (statusColor[order.orderStatus] || '#2874f0') + '15', cursor: 'pointer', outline: 'none' }}
+                onClick={e => e.stopPropagation()}>
+                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              {expanded === order.orderId ? <FiChevronUp /> : <FiChevronDown />}
+            </div>
+          </div>
+          {expanded === order.orderId && (
+            <div style={{ borderTop: '1px solid var(--border)', padding: '14px 20px' }}>
+              {order.orderItems?.map(item => (
+                <div key={item.orderItemId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                  <img src={item.product?.image && item.product.image !== 'default.png' ? `/images/${item.product.image}` : `https://placehold.co/48x48/f8f9fa/2874f0?text=P`} alt="" style={{ width: 48, height: 48, objectFit: 'contain', background: '#f8f9fa', borderRadius: 6 }} />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 600, fontSize: 14 }}>{item.product?.productName}</p>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Qty: {item.quantity} × ₹{item.orderedProductPrice}</p>
+                  </div>
+                  <p style={{ fontWeight: 700 }}>₹{(item.orderedProductPrice * item.quantity).toFixed(0)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
-  )
-}
-
-export default Orders
+  );
+};
+export default AdminOrders;

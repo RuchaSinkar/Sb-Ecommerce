@@ -1,161 +1,57 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { DataGrid } from "@mui/x-data-grid";
-import { FaFolderOpen, FaThList } from "react-icons/fa";
-import toast from "react-hot-toast";
-
-import Modal from "../../shared/Modal";
-import AddCategoryForm from "./AddCategoryForm";
-import Loader from "../../shared/Loader";
-import { DeleteModal } from "../../../components/shared/DeleteModal";
-import useCategoryFilter from "../../../hooks/useCategoryFilter";
-import ErrorPage from "../../shared/ErrorPage";
-import { deleteCategoryDashboardAction } from "../../../store/actions";
-import { categoryTableColumns } from "../../helper/tableColumn";
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { fetchCategories, deleteCategory } from '../../../store/actions';
+import { categoryAPI } from '../../../services/api';
+import Modal from '../../shared/Modal';
+import DeleteModal from '../../shared/DeleteModal';
+import AddCategoryForm from './AddCategoryForn';
+import Loader from '../../shared/Loader';
 
 const Category = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const pathname = useLocation().pathname;
-  const [searchParams] = useSearchParams();
+  const { categories } = useSelector((state) => state.products);
+  const { isLoading } = useSelector((state) => state.errors);
+  const [selected, setSelected] = useState(null);
+  const [modal, setModal] = useState(null);
 
-  const params = new URLSearchParams(searchParams);
+  useEffect(() => { dispatch(fetchCategories()); }, [dispatch]);
 
-  const [openModal, setOpenModal] = useState(false);
-  const [openUpdateModal, setOpenUpdateModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-
-  const { categoryLoader, errorMessage } = useSelector((state) => state.errors);
-  const { categories, pagination } = useSelector((state) => state.products);
-
-  const [currentPage, setCurrentPage] = useState(
-    pagination?.pageNumber ? pagination.pageNumber + 1 : 1
-  );
-
-  // Fetch categories based on filters / pagination
-  useCategoryFilter();
-
-  const tableRecords =
-    categories?.map((item) => ({
-      id: item.categoryId,
-      categoryName: item.categoryName,
-      version: item.version,
-    })) || [];
-
-  const handleEdit = (category) => {
-    setSelectedCategory(category);
-    setOpenUpdateModal(true);
-  };
-
-  const handleDelete = (category) => {
-    setSelectedCategory(category);
-    setOpenDeleteModal(true);
-  };
-
-  const onDeleteHandler = () => {
-    dispatch(
-      deleteCategoryDashboardAction(
-        setOpenDeleteModal,
-        selectedCategory?.id,
-        toast
-      )
-    );
-  };
-
-  const handlePaginationChange = (paginationModel) => {
-    const page = paginationModel.page + 1;
-    setCurrentPage(page);
-
-    params.set("page", page.toString());
-    navigate(`${pathname}?${params}`);
-  };
-
-  const emptyCategories = !categories || categories.length === 0;
-
-  if (errorMessage) return <ErrorPage message={errorMessage} />;
+  const closeModal = () => { setSelected(null); setModal(null); };
 
   return (
     <div>
-      {/* Add Category Button */}
-      <div className="pt-6 pb-10 flex justify-end">
-        <button
-          onClick={() => setOpenModal(true)}
-          className="bg-custom-blue hover:bg-blue-800 text-white font-semibold py-2 px-4 flex items-center gap-2 rounded-md shadow-md transition duration-300"
-        >
-          <FaThList className="text-xl" />
-          Add Category
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800 }}>Categories</h1>
+        <button onClick={() => setModal('add')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+          <FiPlus size={16} /> Add Category
         </button>
       </div>
-
-      {!emptyCategories && (
-        <h1 className="text-slate-800 text-3xl text-center font-bold pb-6 uppercase">
-          All Categories
-        </h1>
-      )}
-
-      {categoryLoader ? (
-        <Loader />
-      ) : (
-        <>
-          {emptyCategories ? (
-            <div className="flex flex-col items-center justify-center text-gray-600 py-10">
-              <FaFolderOpen size={50} className="mb-3" />
-              <h2 className="text-2xl font-semibold">
-                No Categories Created Yet
-              </h2>
+      {isLoading ? <Loader /> : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+          {categories?.map((cat, i) => (
+            <div key={cat.categoryId} style={{ background: '#fff', borderRadius: 10, padding: '18px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: `hsl(${(i * 47) % 360}, 70%, 92%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: `hsl(${(i * 47) % 360}, 60%, 40%)` }}>
+                  {cat.categoryName?.charAt(0).toUpperCase()}
+                </div>
+                <span style={{ fontWeight: 600, fontSize: 15 }}>{cat.categoryName}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => { setSelected(cat); setModal('edit'); }} style={{ padding: 7, borderRadius: 6, border: '1px solid #2874f030', background: '#2874f010', color: 'var(--primary)', cursor: 'pointer' }}><FiEdit2 size={14} /></button>
+                <button onClick={() => { setSelected(cat); setModal('delete'); }} style={{ padding: 7, borderRadius: 6, border: '1px solid var(--danger)30', background: 'var(--danger)10', color: 'var(--danger)', cursor: 'pointer' }}><FiTrash2 size={14} /></button>
+              </div>
             </div>
-          ) : (
-            <div className="max-w-fit mx-auto">
-              <DataGrid
-                rows={tableRecords}
-                columns={categoryTableColumns(handleEdit, handleDelete)}
-                paginationMode="server"
-                rowCount={pagination?.totalElements || 0}
-                initialState={{
-                  pagination: {
-                    paginationModel: {
-                      pageSize: pagination?.pageSize || 10,
-                      page: currentPage - 1,
-                    },
-                  },
-                }}
-                onPaginationModelChange={handlePaginationChange}
-                disableRowSelectionOnClick
-                disableColumnResize
-                pageSizeOptions={[pagination?.pageSize || 10]}
-                pagination
-              />
-            </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
-
-      {/* Add / Update Category Modal */}
-      <Modal
-        open={openModal || openUpdateModal}
-        setOpen={openUpdateModal ? setOpenUpdateModal : setOpenModal}
-        title={openUpdateModal ? "Update Category" : "Add Category"}
-      >
-        <AddCategoryForm
-          setOpen={openUpdateModal ? setOpenUpdateModal : setOpenModal}
-          open={categoryLoader}
-          category={selectedCategory}
-          update={openUpdateModal}
-        />
+      <Modal open={modal === 'add' || modal === 'edit'} setOpen={closeModal} title={modal === 'edit' ? 'Edit Category' : 'Add Category'}>
+        <AddCategoryForm setOpen={closeModal} category={selected} update={modal === 'edit'} />
       </Modal>
-
-      {/* Delete Modal */}
-      <DeleteModal
-        open={openDeleteModal}
-        loader={categoryLoader}
-        setOpen={setOpenDeleteModal}
-        title="Are you sure you want to delete this category?"
-        onDeleteHandler={onDeleteHandler}
-      />
+      <DeleteModal open={modal === 'delete'} setOpen={closeModal} loader={false} title="Delete Category"
+        onDeleteHandler={() => { dispatch(deleteCategory(selected?.categoryId, toast)); closeModal(); }} />
     </div>
   );
 };
-
 export default Category;

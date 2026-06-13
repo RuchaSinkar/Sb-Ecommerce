@@ -1,50 +1,426 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 
-@theme {
-  --font-montserrat: Montserrat, sans-serif;
-
-  --shadow-custom: 0 0 15px rgba(0, 0, 0, 0.3);
-  --shadow-right: 10px 0px 10px -5px rgba(0, 0, 0, 0.3);
-
-  --color-custom-blue: rgba(28, 100, 242, 1);
-
-  --color-banner-color1: #fdc200;
-  --color-banner-color2: #ff2c2c;
-  --color-banner-color3: #21ad61;
-  --color-banner-color4: #723da6;
-
-  --background-image-custom-gradient: linear-gradient(
-    to right,
-    #111827,
-    #1f2937
-  );
-  --background-image-button-gradient: linear-gradient(
-    to right,
-    #7e22ce,
-    #ef4444
-  );
-  --background-image-custom-gradient2: linear-gradient(
-    135deg,
-    #f5f5f5,
-    #eae7dc
-  );
+:root {
+  --primary: #2874f0;
+  --primary-dark: #1a5dc8;
+  --primary-light: #e8f0fe;
+  --accent: #fb641b;
+  --success: #26a541;
+  --warning: #ff9f00;
+  --danger: #ff6161;
+  --bg: #f1f3f6;
+  --surface: #ffffff;
+  --border: #e0e0e0;
+  --text-primary: #212121;
+  --text-secondary: #878787;
+  --navbar-h: 56px;
+  --font-display: 'Inter', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
 }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.animate-fadeUp { animation: fadeUp 0.4s ease both; }
+
+.skeleton {
+  background: linear-gradient(90deg, #ebebeb 25%, #f5f5f5 50%, #ebebeb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
 /*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+:root {
+ 
+  --primary: #131921;
+  --primary-dark: #0f1111;
+  --primary-light: #232f3e;
+
+  --accent: #ff9900;
+  --accent-hover: #f7ca00;
+
+  --success: #007600;
+  --warning: #ffb84d;
+  --danger: #c62828;
+
+  --bg: #eaeded;
+  --surface: #ffffff;
+  --border: #d5d9d9;
+
+  --text-primary: #0f1111;
+  --text-secondary: #565959;
+
+  --navbar-h: 60px;
+
+  --font-display: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --shadow-sm: 0 1px 3px rgba(15, 17, 17, 0.1);
+  --shadow-md: 0 2px 8px rgba(15, 17, 17, 0.15);
+  --shadow-lg: 0 4px 16px rgba(15, 17, 17, 0.18);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 0.35s ease both;
+}
+
+
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f2f2 25%,
+    #fafafa 50%,
+    #f0f2f2 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+
+
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+
+.btn-primary {
+  background: var(--accent);
+  color: #111;
+  border: 1px solid #f0c14b;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c7c7c7;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+::selection {
+  background: rgba(255, 153, 0, 0.2);
+}*/
+
+/*
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+
+
+  --primary: #111827;
+  --primary-dark: #030712;
+  --primary-light: #f5f5f7;
+
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+
+  --success: #34c759;
+  --warning: #ff9f0a;
+  --danger: #ff3b30;
+
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+
+  --text-primary: #1d1d1f;
+  --text-secondary: #6e6e73;
+
+  --navbar-h: 64px;
+
+  --font-display: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.08);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 0.4s ease both;
+}
+
+
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f2f2f2 25%,
+    #fafafa 50%,
+    #f2f2f2 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 12px 22px;
+}
+
+
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+::selection {
+  background: rgba(0,113,227,0.15);
+}
+*/

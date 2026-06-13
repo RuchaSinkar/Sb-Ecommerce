@@ -1,83 +1,47 @@
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
-import toast from "react-hot-toast";
+import { useForm } from 'react-hook-form';
+import { useDispatch } from 'react-redux';
+import toast from 'react-hot-toast';
+import { fetchCategories } from '../../../store/actions';
+import { categoryAPI } from '../../../services/api';
+import { useState } from 'react';
 
-import {
-  createCategoryDashboardAction,
-  updateCategoryDashboardAction,
-} from "../../../store/actions";
-import InputField from "../../shared/InputField";
-
-const AddCategoryForm = ({ setOpen, open, category, update = false }) => {
+const AddCategoryForm = ({ setOpen, category, update }) => {
   const dispatch = useDispatch();
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm({
-    mode: "onTouched",
+  const [loading, setLoading] = useState(false);
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: update ? { categoryName: category?.categoryName } : {}
   });
 
-  const addNewCategoryHandler = (data) => {
-    if (!update) {
-      //dispatch createCategoryDashboardAction
-      dispatch(createCategoryDashboardAction(data, setOpen, reset, toast));
-    } else {
-      //dispatch updateCategoryDashboardAction
-      dispatch(
-        updateCategoryDashboardAction(data, setOpen, category.id, reset, toast)
-      );
-    }
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      if (update) {
+        await categoryAPI.update(category.categoryId, data);
+        toast.success('Category updated!');
+      } else {
+        await categoryAPI.create(data);
+        toast.success('Category created!');
+      }
+      dispatch(fetchCategories());
+      setOpen(false);
+    } catch (e) {
+      toast.error(e?.response?.data?.message || 'Failed');
+    } finally { setLoading(false); }
   };
-  useEffect(() => {
-    if (update && category) {
-      setValue("categoryName", category?.categoryName);
-    }
-  }, [update, category]);
 
   return (
-    <div className="py-5 relative h-full ">
-      <form
-        className="space-y-4 "
-        onSubmit={handleSubmit(addNewCategoryHandler)}
-      >
-        <div className="flex md:flex-row flex-col gap-4 w-full ">
-          <InputField
-            label="Category Name"
-            required
-            id="categoryName"
-            type="text"
-            message="This field is required*"
-            placeholder="Category Name"
-            register={register}
-            errors={errors}
-          />
-        </div>
-
-        <div className="flex  w-full justify-between items-center absolute bottom-14">
-          <button
-            disabled={open}
-            onClick={() => setOpen(false)}
-            type="button"
-            className={`border border-borderColor rounded-[5px] font-metropolis  text-textColor py-[10px] px-4 text-sm font-medium`}
-          >
-            Cancel
-          </button>
-          <button
-            disabled={open}
-            type="submit"
-            className={`font-metropolis rounded-[5px]  bg-custom-blue hover:bg-blue-800 text-white  py-[10px] px-4 text-sm font-medium`}
-          >
-            {open ? "Loading.." : update ? "Update" : "Save"}
-          </button>
-        </div>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div>
+        <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Category Name</label>
+        <input {...register('categoryName', { required: 'Required', minLength: { value: 5, message: 'Min 5 characters' } })}
+          placeholder="e.g. Electronics"
+          style={{ width: '100%', padding: '10px 14px', border: `1.5px solid ${errors.categoryName ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 6, fontSize: 14, outline: 'none' }} />
+        {errors.categoryName && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 3 }}>{errors.categoryName.message}</p>}
+      </div>
+      <button type="submit" disabled={loading} style={{ padding: '11px', background: loading ? '#ccc' : 'var(--primary)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}>
+        {loading ? 'Saving...' : update ? 'Update Category' : 'Add Category'}
+      </button>
+    </form>
   );
 };
-
 export default AddCategoryForm;

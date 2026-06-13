@@ -1,0 +1,84 @@
+# ============================================================
+# docker-compose.prod.yml — Used on the VPS by the CD pipeline
+#
+# Unlike docker-compose.yml (which builds locally), this pulls
+# pre-built images from GitHub Container Registry (GHCR).
+#
+# Setup on VPS (one-time):
+#   1. mkdir -p /opt/shopnest && cd /opt/shopnest
+#   2. Copy this file there as docker-compose.yml
+#   3. Create .env with real secrets (see .env.example)
+#   4. docker login ghcr.io -u <github-username> -p <PAT-with-read:packages>
+#   5. docker compose pull && docker compose up -d
+#
+# After that, CD pipeline just does: docker compose pull && up -d
+# ============================================================
+
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: shopnest-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-sb_ecom}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shopnest-net
+    # No external port — only backend container needs to reach it
+
+  backend:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/YOUR_REPO/backend:latest
+    container_name: shopnest-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-sb_ecom}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+    volumes:
+      - product-images:/app/images
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - shopnest-net
+    # No external port — Nginx (frontend) proxies to it internally
+
+  frontend:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/YOUR_REPO/frontend:latest
+    container_name: shopnest-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      # Add 443:443 here once you set up HTTPS (see Traefik notes)
+    depends_on:
+      - backend
+    networks:
+      - shopnest-net
+
+networks:
+  shopnest-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
+  product-images:
+    driver: local

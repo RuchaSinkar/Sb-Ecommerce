@@ -1,102 +1,58 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { FaUserPlus } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { registerNewUser } from "../../store/actions";
-import toast from "react-hot-toast";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import toast from 'react-hot-toast';
+import { registerUser } from '../../store/actions';
+import { FiUserPlus } from 'react-icons/fi';
 
 const Register = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm();
-
-  const registerHandler = (data) => {
+  const onSubmit = async (data) => {
     setLoading(true);
-    dispatch(registerNewUser(data, toast, navigate, setLoading));
+    await dispatch(registerUser({
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      role: ['user'],
+    }, toast, navigate, setLoading));
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-
-      <form
-        onSubmit={handleSubmit(registerHandler)}
-        className="w-[380px] bg-white shadow-lg rounded-lg p-8"
-      >
-
-        {/* HEADER */}
-        <div className="flex flex-col items-center mb-6">
-          <FaUserPlus className="text-4xl text-gray-700 mb-2" />
-          <h2 className="text-2xl font-semibold">Create Account</h2>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--primary) 0%, #1a3c8f 100%)', paddingTop: 56 }}>
+      <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxWidth: 480, width: '100%', margin: 16, padding: '40px 36px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, marginBottom: 6 }}>
+            <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 12, marginRight: 6 }}>SN</span>ShopNest
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700 }}>Create Account</h2>
         </div>
-
-        {/* USERNAME */}
-        <div className="mb-4">
-          <label className="text-sm font-medium">Username</label>
-          <input
-            {...register("username", { required: true })}
-            placeholder="Enter username"
-            className="w-full border rounded-md p-2 mt-1"
-          />
-          {errors.username && (
-            <p className="text-red-500 text-xs">Username is required</p>
-          )}
-        </div>
-
-        {/* EMAIL */}
-        <div className="mb-4">
-          <label className="text-sm font-medium">Email</label>
-          <input
-            type="email"
-            {...register("email", { required: true })}
-            placeholder="Enter email"
-            className="w-full border rounded-md p-2 mt-1"
-          />
-          {errors.email && (
-            <p className="text-red-500 text-xs">Email is required</p>
-          )}
-        </div>
-
-        {/* PASSWORD */}
-        <div className="mb-4">
-          <label className="text-sm font-medium">Password</label>
-          <input
-            type="password"
-            {...register("password", { required: true, minLength: 6 })}
-            placeholder="Enter password"
-            className="w-full border rounded-md p-2 mt-1"
-          />
-          {errors.password && (
-            <p className="text-red-500 text-xs">
-              Password must be at least 6 characters
-            </p>
-          )}
-        </div>
-
-        {/* BUTTON */}
-        <button
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
-        >
-          {loading ? "Creating account..." : "Register"}
-        </button>
-
-        {/* LOGIN LINK */}
-        <p className="text-center text-sm mt-5">
-          Already have an account?{" "}
-          <Link to="/login" className="text-blue-600 font-medium">
-            Login
-          </Link>
+        <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {[
+            { name: 'username', label: 'Username', placeholder: 'Choose a username', rules: { required: 'Required', minLength: { value: 3, message: 'Min 3 characters' } } },
+            { name: 'email', label: 'Email', placeholder: 'your@email.com', rules: { required: 'Required', pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email' } } },
+            { name: 'password', label: 'Password', placeholder: 'Min 6 characters', type: 'password', rules: { required: 'Required', minLength: { value: 6, message: 'Min 6 characters' } } },
+          ].map(f => (
+            <div key={f.name}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>{f.label}</label>
+              <input type={f.type || 'text'} {...register(f.name, f.rules)} placeholder={f.placeholder}
+                style={{ width: '100%', padding: '10px 14px', border: `1.5px solid ${errors[f.name] ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 6, fontSize: 14, outline: 'none' }} />
+              {errors[f.name] && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 4 }}>{errors[f.name].message}</p>}
+            </div>
+          ))}
+          <button type="submit" disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', background: loading ? '#ccc' : 'var(--primary)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 16, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4 }}>
+            <FiUserPlus size={18} /> {loading ? 'Creating account...' : 'Create Account'}
+          </button>
+        </form>
+        <p style={{ textAlign: 'center', fontSize: 14, marginTop: 20, color: 'var(--text-secondary)' }}>
+          Already have an account? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 700 }}>Sign In</Link>
         </p>
-
-      </form>
-
+      </div>
     </div>
   );
 };

@@ -1,79 +1,36 @@
-import React, { useState } from "react";
-import Sidebar from "../shared/Sidebar";
-import { Outlet } from "react-router-dom";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  TransitionChild,
-} from "@headlessui/react";
-import { RxCross1 } from "react-icons/rx";
-import { FaBars } from "react-icons/fa";
+import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import { FaBars } from 'react-icons/fa';
+import { RxCross1 } from 'react-icons/rx';
+import Sidebar from '../shared/Sidebar';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
-    <div>
-      {/* Mobile Sidebar */}
-      <Dialog
-        open={sidebarOpen}
-        onClose={setSidebarOpen}
-        className="relative z-50 xl:hidden"
-      >
-        <DialogBackdrop
-          transition
-          className="fixed inset-0 bg-gray-900/80 transition-opacity duration-300 ease-linear data-[closed]:opacity-0"
-        />
-
-        <div className="fixed inset-0 flex">
-          <DialogPanel
-            transition
-            className="relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full"
-          >
-            <TransitionChild>
-              <div className="absolute left-full top-0 flex w-16 justify-center pt-5 duration-300 ease-in-out data-[closed]:opacity-0">
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(false)}
-                  className="-m-2.5 p-2.5"
-                >
-                  <span className="sr-only">Close Sidebar</span>
-                  <RxCross1 className="text-white text-2xl" />
-                </button>
-              </div>
-            </TransitionChild>
-
-            <Sidebar />
-          </DialogPanel>
-        </div>
-      </Dialog>
-
-      {/* Desktop Sidebar */}
-      <div className="hidden xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col">
+    <div style={{ paddingTop: 56, display: 'flex', minHeight: '100vh' }}>
+      {/* Desktop sidebar */}
+      <div style={{ position: 'fixed', top: 56, left: 0, bottom: 0, zIndex: 50, display: 'none' }} className="xl-sidebar">
         <Sidebar />
       </div>
-
-      {/* Main Content */}
-      <div className="xl:pl-72">
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          onClick={() => setSidebarOpen(true)}
-          className="-m-2.5 p-4 text-gray-700 xl:hidden"
-        >
-          <span className="sr-only">Open Sidebar</span>
-          <FaBars className="text-slate-800 text-2xl" />
-        </button>
-
-        <main>
-          <div className="p-4 sm:p-6 xl:p-8">
-            <Outlet />
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <>
+          <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 150, background: 'rgba(0,0,0,0.5)' }} />
+          <div style={{ position: 'fixed', top: 56, left: 0, bottom: 0, zIndex: 160 }}>
+            <Sidebar />
+            <button onClick={() => setSidebarOpen(false)} style={{ position: 'absolute', top: 12, right: -40, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><RxCross1 size={22} /></button>
           </div>
-        </main>
+        </>
+      )}
+      {/* Main content */}
+      <div style={{ flex: 1, marginLeft: 0, padding: '24px 16px' }}>
+        <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+          <FaBars size={20} /> Menu
+        </button>
+        <Outlet />
       </div>
+      <style>{`@media (min-width: 1280px) { .xl-sidebar { display: block !important; } div[style*="margin-left: 0"] { margin-left: 260px !important; } button[style*="margin-bottom: 16px"] { display: none !important; } }`}</style>
     </div>
   );
 };
-
 export default AdminLayout;

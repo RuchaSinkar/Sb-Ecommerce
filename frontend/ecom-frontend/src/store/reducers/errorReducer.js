@@ -20,7 +20,7 @@ export const errorReducer = (state=initialState,action)=>{
         case "IS_ERROR":
             return{
                 ...state,
-                isLoading:flase,
+                isLoading:false,
                 errorMessage:action.payload,
             };
         default:

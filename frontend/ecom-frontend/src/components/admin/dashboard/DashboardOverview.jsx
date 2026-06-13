@@ -1,27 +1,12 @@
-import React from "react";
-import { formatRevenue } from "../../../utils/formatPrice";
-
-const DashboardOverview = ({ title, amount, Icon, revenue = false }) => {
-
-  const convertedAmount = revenue ? Number(amount || 0).toFixed(2) : amount;
-
-  return (
-    <div className="xl:w-80 w-full space-y-4 text-center md:text-start px-5 py-8">
-      
-      <div className="flex md:justify-start justify-center items-center gap-2">
-        <h3 className="uppercase text-2xl text-slate-700 font-semibold">
-          {title}
-        </h3>
-        <Icon className="text-slate-800 text-2xl" />
-      </div>
-
-      <h1 className="font-bold text-slate-800 text-3xl">
-        {revenue ? "$" : ""}
-        {revenue ? formatRevenue(convertedAmount) : convertedAmount}
-      </h1>
-
+const DashboardOverview = ({ title, amount, Icon, revenue }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '24px 28px', flex: 1 }}>
+    <div style={{ width: 48, height: 48, borderRadius: 10, background: 'rgba(40,116,240,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Icon size={24} style={{ color: '#2874f0' }} />
     </div>
-  );
-};
-
+    <div>
+      <p style={{ fontSize: 13, color: '#878787', fontWeight: 600 }}>{title}</p>
+      <p style={{ fontSize: 24, fontWeight: 800 }}>{revenue ? `₹${amount}` : amount}</p>
+    </div>
+  </div>
+);
 export default DashboardOverview;
