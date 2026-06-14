@@ -27,7 +27,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
 
       - name: Build jar (skip tests since no test classes exist yet)
         working-directory: ./sb-ecom
