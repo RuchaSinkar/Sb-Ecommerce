@@ -1,0 +1,8 @@
+<!-- ============================================================
+     ADD THIS to your existing pom.xml <dependencies> section
+     Required for the Docker HEALTHCHECK to work
+     ============================================================ -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
