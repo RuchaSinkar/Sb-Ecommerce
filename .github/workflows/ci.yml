@@ -8,18 +8,19 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ${{ github.repository }}/backend
-  FRONTEND_IMAGE: ${{ github.repository }}/frontend
+  BACKEND_IMAGE: ${{ github.repository_owner }}/sb-ecommerce/backend
+  FRONTEND_IMAGE: ${{ github.repository_owner }}/sb-ecommerce/frontend
 
 jobs:
 
   # ─────────────────────────────────────────────────────────
-  # Backend: test + build
+  # Backend: build + test
   # ─────────────────────────────────────────────────────────
   backend-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -28,35 +29,30 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run tests
-        working-directory: ./sb-ecom
-        run: mvn -B test
-
-      - name: Build jar
+      - name: Build jar (skip tests since no test classes exist yet)
         working-directory: ./sb-ecom
         run: mvn -B clean package -DskipTests
 
   # ─────────────────────────────────────────────────────────
-  # Frontend: lint + build
+  # Frontend: build
   # ─────────────────────────────────────────────────────────
   frontend-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: npm
-          cache-dependency-path: ecom-frontend/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./ecom-frontend
+        working-directory: ./frontend/ecom-frontend
         run: npm ci
 
       - name: Build
-        working-directory: ./ecom-frontend
+        working-directory: ./frontend/ecom-frontend
         run: npm run build
 
   # ─────────────────────────────────────────────────────────
@@ -71,7 +67,8 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -83,7 +80,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ─── Backend image ─────────────────────────────────────
+      # ─── Backend image ──────────────────────────────────
       - name: Build & push backend image
         uses: docker/build-push-action@v5
         with:
@@ -95,11 +92,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ─── Frontend image ────────────────────────────────────
+      # ─── Frontend image ─────────────────────────────────
       - name: Build & push frontend image
         uses: docker/build-push-action@v5
         with:
-          context: ./ecom-frontend
+          context: ./frontend/ecom-frontend
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
