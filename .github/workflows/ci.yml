@@ -8,8 +8,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ${{ github.repository_owner }}/sb-ecommerce/backend
-  FRONTEND_IMAGE: ${{ github.repository_owner }}/sb-ecommerce/frontend
+  BACKEND_IMAGE: ruchasinkar/sb-ecommerce/backend
+  FRONTEND_IMAGE: ruchasinkar/sb-ecommerce/frontend
 
 jobs:
 
