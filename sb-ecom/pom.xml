@@ -91,6 +91,28 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+        	<!-- Redis Cache -->
+        	<dependency>
+            		<groupId>org.springframework.boot</groupId>
+            		<artifactId>spring-boot-starter-data-redis</artifactId>
+        	</dependency>
+
+        	<!-- Spring Cache abstraction -->
+        	<dependency>
+            		<groupId>org.springframework.boot</groupId>
+            		<artifactId>spring-boot-starter-cache</artifactId>
+        	</dependency>
+		<!-- Kafka -->
+		<dependency>
+		    <groupId>org.springframework.kafka</groupId>
+		    <artifactId>spring-kafka</artifactId>
+		</dependency>		
+		<!-- MinIO S3-compatible storage -->
+		<dependency>
+		    <groupId>io.minio</groupId>
+		    <artifactId>minio</artifactId>
+		    <version>8.5.7</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

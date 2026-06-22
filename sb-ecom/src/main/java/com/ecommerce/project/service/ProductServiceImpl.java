@@ -11,6 +11,9 @@ import com.ecommerce.project.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +42,10 @@ public class ProductServiceImpl implements ProductService{
     @Value("${project.image}")
     private String path;
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "productsByCategory", allEntries = true)
+    })
     public ProductDTO addProduct(Long categoryId, ProductDTO productDTO){
 
         Category category=categoryRepository.findById(categoryId)
@@ -66,6 +73,8 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
+    @Cacheable(value = "products",
+    key = "#pageNumber + '-' + #pageSize + '-' +#sortBy + '-' + #sortOrder")
     public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder){
         Sort sortByAndOrder=sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
@@ -88,6 +97,8 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
+    @Cacheable(value = "productsByCategory",
+    key = "#categoryId + '-' + #pageNumber + '-' + #pageSize + '-' + #sortBy + '-' + #sortOrder")
     public ProductResponse searchByCategory(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, Long categoryId){
         Category category=categoryRepository.findById(categoryId)
                 .orElseThrow(()-> new ResourceNotFoundException("Category","category",categoryId));
@@ -112,6 +123,8 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
+    @Cacheable(value = "productSearch",
+    key = "#keyword + '-' + #pageNumber + '-' + #pageSize")
     public ProductResponse searchProductsByKeyword(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder,String keyword){
         Sort sortByAndOrder=sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
@@ -133,6 +146,12 @@ public class ProductServiceImpl implements ProductService{
         return productResponse;    }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "productsByCategory", allEntries = true),
+            @CacheEvict(value = "productSearch", allEntries = true),
+            @CacheEvict(value = "product", key = "#productId")
+    })
     public ProductDTO updateProduct(Long productId, ProductDTO productDTO){
         Product product=modelMapper.map(productDTO,Product.class);
         Product productfromDb=productRepository.findById(productId)
@@ -149,6 +168,12 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
+    @Caching(evict ={
+            @CacheEvict(value = "products",          allEntries = true),
+            @CacheEvict(value = "productsByCategory", allEntries = true),
+            @CacheEvict(value = "productSearch",      allEntries = true),
+            @CacheEvict(value = "product",            key = "#productId")
+    })
     public ProductDTO deleteProduct(Long productId) {
         Product findProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
@@ -157,6 +182,10 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product",  key = "#productId")
+    })
     public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
         Product productFromDB=productRepository.findById(productId)
                 .orElseThrow(()->new ResourceNotFoundException("Product","productId",productId));

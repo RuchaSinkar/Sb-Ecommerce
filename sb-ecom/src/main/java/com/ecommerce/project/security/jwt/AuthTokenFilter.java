@@ -21,47 +21,59 @@ import java.io.IOException;
 public class AuthTokenFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtils jwtUtils;
+
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
-    private static final Logger logger= LoggerFactory.getLogger(AuthTokenFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-
         return path.startsWith("/images/")
-                || path.startsWith("/api/auth/")
+                || path.startsWith("/api/auth/signin")
+                || path.startsWith("/api/auth/signup")
                 || path.startsWith("/api/public/")
                 || path.startsWith("/actuator/");
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        logger.debug("AuthTokenFilter called for URI: {}",request.getRequestURI());
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
+
+        logger.debug("AuthTokenFilter called for URI: {}", request.getRequestURI());
         try {
-            String jwt=parseJwt(request);
-            if(jwt!=null && jwtUtils.validateJwtToken(jwt)){
-                String username=jwtUtils.getUserNameFromJWTToken(jwt);
-                UserDetails userDetails=userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication=new UsernamePasswordAuthenticationToken(
-                        userDetails,null,userDetails.getAuthorities()
-                );
+            String jwt = parseJwt(request);
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                String username = jwtUtils.getUserNameFromJWTToken(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(
-                        new WebAuthenticationDetailsSource()
-                        .buildDetails(request));
+                        new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                logger.debug("Role from JWT: {}", userDetails.getAuthorities());
             }
-        }catch (Exception e){
-            logger.error("Cannot set user authentication: {}",e);
+        } catch (Exception e) {
+            logger.error("Cannot set user authentication: {}", e);
         }
         filterChain.doFilter(request, response);
     }
 
     private String parseJwt(HttpServletRequest request) {
-        String jwt=jwtUtils.getJwtFromCookies(request);
-        logger.debug("AuthTokenFilter.java: {}",jwt);
+        // 1. Try Authorization: Bearer <token> header first (used by frontend via localStorage)
+        String headerAuth = request.getHeader("Authorization");
+        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+            String token = headerAuth.substring(7);
+            logger.debug("JWT from Authorization header");
+            return token;
+        }
+
+        // 2. Fall back to cookie (legacy / direct browser requests)
+        String jwt = jwtUtils.getJwtFromCookies(request);
+        logger.debug("JWT from cookie: {}", jwt);
         return jwt;
     }
 }

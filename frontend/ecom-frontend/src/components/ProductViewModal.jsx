@@ -18,9 +18,13 @@ function ProductViewModal({open,setOpen,product,isAvailable}) {
               className="relative transform rounded-lg bg-white shadow-xl transition-all w-full max-w-155"
             >
                 {image &&(
-                    <div className='flex justify-center aspect-3/2'>
-                        <img src={image} alt={productName} className="w-full h-full cursor-pointer transition-transform duration-300 transform hover:scale-105"/>
-                    </div>
+                <div className="h-96 flex items-center justify-center bg-gray-100 overflow-hidden">
+                    <img
+                        src={image}
+                        alt={productName}
+                        className="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-105"
+                    />
+                </div>
                 )}
                 
                         <div className='px-6 pt-10 pb-2'>

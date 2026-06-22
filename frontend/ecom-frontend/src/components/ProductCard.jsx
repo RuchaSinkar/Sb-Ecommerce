@@ -147,7 +147,7 @@ const ProductCard = ({
                 <img
                 src={backendImageUrl} //  Uses the absolute Spring Boot address
                 alt={productName}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
                 />            
                 </div>
             <div className="p-4">

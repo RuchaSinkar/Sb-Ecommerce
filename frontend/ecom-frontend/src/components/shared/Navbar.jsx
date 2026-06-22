@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FiShoppingCart, FiUser, FiSearch, FiLogOut, FiPackage, FiLayout, FiChevronDown } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { logoutUser, searchProducts } from '../../store/actions';
+import { logoutUser } from '../../store/actions';
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -19,7 +19,6 @@ const Navbar = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) {
-      dispatch(searchProducts(search.trim()));
       navigate(`/products?q=${encodeURIComponent(search.trim())}`);
       setSearch('');
     }

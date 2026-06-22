@@ -8,6 +8,8 @@ import com.ecommerce.project.payload.CategoryResponse;
 import com.ecommerce.project.repository.CategoryRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,7 @@ public class CategoryServiceImpl implements CategoryService{
     private ModelMapper modelMapper;
 
     @Override
+    @Cacheable(value = "categories", key = "#pageNumber + '-; + #pageSize")
     public CategoryResponse getAllCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortByAndOrder = sortOrder.equals("asc")
                 ? Sort.by(sortBy).ascending()
@@ -48,6 +51,7 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
         Category category=modelMapper.map(categoryDTO,Category.class);
         Category categoryFromDB=categoryRepository.findByCategoryName(category.getCategoryName());
@@ -57,6 +61,7 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryDTO deleteCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(()->new ResourceNotFoundException("Category","categoryId",categoryId));
@@ -66,6 +71,7 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryDTO updateCategory(CategoryDTO categoryDTO, Long categoryId) {
 
         Category savedCategory = categoryRepository.findById(categoryId)

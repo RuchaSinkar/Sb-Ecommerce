@@ -52,7 +52,7 @@ const imgSrc = product.image && product.image !== 'default.png'
         {/* Image */}
         <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', position: 'sticky', top: 72 }}>
           <div style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa', borderRadius: 8, overflow: 'hidden' }}>
-            <img src={imgSrc} alt={product.productName} style={{ maxHeight: '100%', objectFit: 'contain' }} />
+            <img src={imgSrc} alt={product.productName} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 20 }}>
             <button onClick={handleAdd} disabled={adding || product.quantity === 0} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px', borderRadius: 4, fontSize: 15, fontWeight: 700, background: 'var(--accent)', color: '#fff', border: 'none', cursor: product.quantity === 0 ? 'not-allowed' : 'pointer', opacity: adding ? 0.7 : 1 }}>

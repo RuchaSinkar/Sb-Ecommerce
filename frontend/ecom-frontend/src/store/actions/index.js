@@ -1,5 +1,15 @@
 import { authAPI, cartAPI, categoryAPI, orderAPI, productAPI } from "../../services/api";
 
+// Helper: extract JWT value from cookie string returned by backend
+// e.g. "springBootEcom=eyJ...; Path=/api; ..." → "eyJ..."
+const extractToken = (jwtToken) => {
+  if (!jwtToken) return null;
+  if (!jwtToken.includes(';') && !jwtToken.includes('=')) return jwtToken; // already clean
+  const cookieValue = jwtToken.split(';')[0]; // "springBootEcom=eyJ..."
+  const eqIdx = cookieValue.indexOf('=');
+  return eqIdx >= 0 ? cookieValue.substring(eqIdx + 1) : cookieValue;
+};
+
 // ─── Products ────────────────────────────────────────────────────────────
 export const fetchProducts = (params) => async (dispatch) => {
   try {
@@ -56,17 +66,48 @@ export const fetchCategories = () => async (dispatch) => {
 export const loadUser = () => async (dispatch) => {
   try {
     dispatch({ type: "AUTH_LOADING" });
-    const { data } = await authAPI.getUser();
-    dispatch({ type: "SET_USER", payload: data });
+    // Restore from localStorage instantly (no flicker on refresh)
+    const cached = localStorage.getItem("shopnest_user");
+    if (cached) {
+      dispatch({ type: "SET_USER", payload: JSON.parse(cached) });
+    }
+    // Verify token still valid with backend
+    const token = localStorage.getItem("shopnest_token");
+    if (!token && !cached) {
+      dispatch({ type: "LOGOUT" });
+      return;
+    }
+    try {
+      const { data } = await authAPI.getUser();
+      dispatch({ type: "SET_USER", payload: data });
+      localStorage.setItem("shopnest_user", JSON.stringify(data));
+    } catch {
+      // Token expired — logout cleanly
+      dispatch({ type: "LOGOUT" });
+      localStorage.removeItem("shopnest_token");
+      localStorage.removeItem("shopnest_user");
+    }
   } catch {
     dispatch({ type: "LOGOUT" });
+    localStorage.removeItem("shopnest_token");
+    localStorage.removeItem("shopnest_user");
   }
 };
 
 export const authenticateSignInUser = (credentials, toast, navigate, setLoading) => async (dispatch) => {
   try {
     const { data } = await authAPI.login(credentials);
-    dispatch({ type: "SET_USER", payload: data });
+    // Extract clean JWT from the cookie string the backend returns
+    const cleanToken = extractToken(data.jwtToken);
+    const userInfo = {
+      id: data.id,
+      username: data.username,
+      email: data.email,
+      roles: data.roles,
+    };
+    localStorage.setItem("shopnest_token", cleanToken);
+    localStorage.setItem("shopnest_user", JSON.stringify(userInfo));
+    dispatch({ type: "SET_USER", payload: userInfo });
     toast.success("Login successful!");
     navigate("/");
   } catch (error) {
@@ -89,16 +130,13 @@ export const registerUser = (userData, toast, navigate, setLoading) => async (di
 };
 
 export const logoutUser = (toast, navigate) => async (dispatch) => {
-  try {
-    await authAPI.logout();
-    dispatch({ type: "LOGOUT" });
-    dispatch({ type: "CLEAR_CART" });
-    toast.success("Signed out successfully");
-    navigate("/");
-  } catch {
-    dispatch({ type: "LOGOUT" });
-    navigate("/");
-  }
+  try { await authAPI.logout(); } catch {}
+  dispatch({ type: "LOGOUT" });
+  dispatch({ type: "CLEAR_CART" });
+  localStorage.removeItem("shopnest_token");
+  localStorage.removeItem("shopnest_user");
+  toast.success("Signed out successfully");
+  navigate("/");
 };
 
 // ─── Cart ────────────────────────────────────────────────────────────────
